@@ -19,6 +19,32 @@
             <div class="error-message" id="errorMessage"></div>
         </div>
 
+        <!-- PIN Setup Screen -->
+        <div class="pin-setup" id="pinSetup" style="display: none;">
+            <h1>Set Your PIN</h1>
+            <p>Create a 4-digit PIN to secure your calendar</p>
+            <div class="pin-input-container">
+                <input type="number" class="pin-input" id="pinInput" placeholder="Enter 4-digit PIN" maxlength="4" min="0" max="9999">
+                <button class="arrow-btn" id="submitPin">→</button>
+            </div>
+            <div class="error-message" id="pinErrorMessage"></div>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="login-screen" id="loginScreen" style="display: none;">
+            <h1>Welcome Back</h1>
+            <p>Enter your PIN to access your calendar</p>
+            <div class="login-info">
+                <strong id="loginUserName"></strong>
+            </div>
+            <div class="pin-input-container">
+                <input type="number" class="pin-input" id="loginPinInput" placeholder="Enter your PIN" maxlength="4" min="0" max="9999">
+                <button class="arrow-btn" id="submitLoginPin">→</button>
+            </div>
+            <div class="error-message" id="loginErrorMessage"></div>
+            <button class="back-btn" id="backToName">← Back to Name Entry</button>
+        </div>
+
         <!-- Calendar Screen -->
         <div class="calendar-container" id="calendarContainer">
             <div class="calendar-header">

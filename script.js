@@ -23,10 +23,28 @@ let allUserDates = [];
 
 // DOM elements
 const nameEntry = document.getElementById('nameEntry');
+const pinSetup = document.getElementById('pinSetup');
+const loginScreen = document.getElementById('loginScreen');
 const calendarContainer = document.getElementById('calendarContainer');
+
+// Name entry elements
 const nameInput = document.getElementById('nameInput');
 const submitNameBtn = document.getElementById('submitName');
 const errorMessage = document.getElementById('errorMessage');
+
+// PIN setup elements
+const pinInput = document.getElementById('pinInput');
+const submitPinBtn = document.getElementById('submitPin');
+const pinErrorMessage = document.getElementById('pinErrorMessage');
+
+// Login elements
+const loginUserName = document.getElementById('loginUserName');
+const loginPinInput = document.getElementById('loginPinInput');
+const submitLoginPinBtn = document.getElementById('submitLoginPin');
+const loginErrorMessage = document.getElementById('loginErrorMessage');
+const backToNameBtn = document.getElementById('backToName');
+
+// Calendar elements
 const userName = document.getElementById('userName');
 const userColorDisplay = document.getElementById('userColorDisplay');
 const monthYear = document.getElementById('monthYear');
@@ -41,6 +59,33 @@ const nextMonthBtn = document.getElementById('nextMonth');
   nameInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleNameSubmit();
   });
+
+  submitPinBtn.addEventListener('click', handlePinSubmit);
+  pinInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handlePinSubmit();
+  });
+  pinInput.addEventListener('input', (e) => {
+      // Ensure only 4 digits
+      if (e.target.value.length > 4) {
+          e.target.value = e.target.value.slice(0, 4);
+      }
+  });
+
+  submitLoginPinBtn.addEventListener('click', handleLoginSubmit);
+  loginPinInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLoginSubmit();
+  });
+  loginPinInput.addEventListener('input', (e) => {
+      // Ensure only 4 digits
+      if (e.target.value.length > 4) {
+          e.target.value = e.target.value.slice(0, 4);
+      }
+  });
+
+  backToNameBtn.addEventListener('click', () => {
+      showNameEntry();
+  });
+
   colorPicker.addEventListener('change', (e) => {
       currentUserColor = e.target.value;
       userColorDisplay.style.backgroundColor = currentUserColor;
@@ -53,17 +98,57 @@ const nextMonthBtn = document.getElementById('nextMonth');
   nameInput.focus();
 });
 
+// Show different screens
+function showNameEntry() {
+  nameEntry.style.display = 'block';
+  pinSetup.style.display = 'none';
+  loginScreen.style.display = 'none';
+  calendarContainer.style.display = 'none';
+  nameInput.value = '';
+  nameInput.focus();
+}
+
+function showPinSetup() {
+  nameEntry.style.display = 'none';
+  pinSetup.style.display = 'block';
+  loginScreen.style.display = 'none';
+  calendarContainer.style.display = 'none';
+  pinInput.value = '';
+  pinInput.focus();
+}
+
+function showLogin(userName) {
+  nameEntry.style.display = 'none';
+  pinSetup.style.display = 'none';
+  loginScreen.style.display = 'block';
+  calendarContainer.style.display = 'none';
+  loginUserName.textContent = userName;
+  loginPinInput.value = '';
+  loginPinInput.focus();
+}
+
+function showCalendar() {
+  nameEntry.style.display = 'none';
+  pinSetup.style.display = 'none';
+  loginScreen.style.display = 'none';
+  calendarContainer.style.display = 'block';
+  userName.textContent = currentUser;
+  userColorDisplay.style.backgroundColor = currentUserColor;
+  loadCalendarData();
+  renderCalendar();
+}
+
 // Handle name submission
 async function handleNameSubmit() {
   const name = nameInput.value.trim();
   
   if (!name) {
-      showError('Please enter a name');
+      showError('Please enter a name', 'errorMessage');
       return;
   }
 
   if (name.length < 2) {
-      showError('Name must be at least 2 characters');
+      showError('Name must be at least 2 characters', 'errorMessage');
       return;
   }
 
@@ -71,56 +156,113 @@ async function handleNameSubmit() {
   try {
       const { data, error } = await window.supabaseClient
           .from('users')
-          .select('name')
+          .select('name, color')
           .eq('name', name);
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-          showError('This name is already taken. Please choose a different name.');
-          return;
+          // User exists, show login screen
+          currentUser = name;
+          currentUserColor = data[0].color;
+          showLogin(name);
+      } else {
+          // New user, show PIN setup
+          currentUser = name;
+          showPinSetup();
       }
-
-      // Name is available, proceed to calendar
-      currentUser = name;
-      await addUserToDatabase();
-      showCalendar();
       
   } catch (error) {
       console.error('Error checking name:', error);
-      showError('Error connecting to database. Please try again.');
+      showError('Error connecting to database. Please try again.', 'errorMessage');
   }
 }
 
-// Add user to database
-async function addUserToDatabase() {
+// Handle PIN setup submission
+async function handlePinSubmit() {
+  const pin = pinInput.value.trim();
+  
+  if (!pin) {
+      showError('Please enter a PIN', 'pinErrorMessage');
+      return;
+  }
+
+  if (pin.length !== 4) {
+      showError('PIN must be exactly 4 digits', 'pinErrorMessage');
+      return;
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+      showError('PIN must contain only numbers', 'pinErrorMessage');
+      return;
+  }
+
+  // Add user to database with PIN
   try {
       const { error } = await window.supabaseClient
           .from('users')
-          .insert([{ name: currentUser, color: currentUserColor }]);
+          .insert([{ 
+              name: currentUser, 
+              color: currentUserColor,
+              pin: pin
+          }]);
 
       if (error) throw error;
+
+      // Success, show calendar
+      showCalendar();
+      
   } catch (error) {
-      console.error('Error adding user:', error);
+      console.error('Error creating user:', error);
+      showError('Error creating account. Please try again.', 'pinErrorMessage');
+  }
+}
+
+// Handle login submission
+async function handleLoginSubmit() {
+  const pin = loginPinInput.value.trim();
+  
+  if (!pin) {
+      showError('Please enter your PIN', 'loginErrorMessage');
+      return;
+  }
+
+  if (pin.length !== 4) {
+      showError('PIN must be exactly 4 digits', 'loginErrorMessage');
+      return;
+  }
+
+  // Verify PIN
+  try {
+      const { data, error } = await window.supabaseClient
+          .from('users')
+          .select('name, color, pin')
+          .eq('name', currentUser)
+          .eq('pin', pin);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+          // Correct PIN, load user data and show calendar
+          currentUserColor = data[0].color;
+          showCalendar();
+      } else {
+          showError('Incorrect PIN. Please try again.', 'loginErrorMessage');
+      }
+      
+  } catch (error) {
+      console.error('Error verifying PIN:', error);
+      showError('Error logging in. Please try again.', 'loginErrorMessage');
   }
 }
 
 // Show error message
-function showError(message) {
-  errorMessage.textContent = message;
+function showError(message, elementId) {
+  const errorElement = document.getElementById(elementId);
+  errorElement.textContent = message;
   setTimeout(() => {
-      errorMessage.textContent = '';
+      errorElement.textContent = '';
   }, 5000);
-}
-
-// Show calendar screen
-function showCalendar() {
-  nameEntry.style.display = 'none';
-  calendarContainer.style.display = 'block';
-  userName.textContent = currentUser;
-  userColorDisplay.style.backgroundColor = currentUserColor;
-  loadCalendarData();
-  renderCalendar();
 }
 
 // Load calendar data from database

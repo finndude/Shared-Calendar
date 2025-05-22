@@ -41,7 +41,60 @@ body {
   font-size: 1.1em;
 }
 
+/* PIN Setup Screen */
+.pin-setup {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.pin-setup h1 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2.5em;
+}
+
+.pin-setup p {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 1.1em;
+}
+
+/* Login Screen */
+.login-screen {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.login-screen h1 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2.5em;
+}
+
+.login-screen p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 1.1em;
+}
+
+.login-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 1.2em;
+}
+
 .name-input-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.pin-input-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -59,7 +112,20 @@ body {
   transition: border-color 0.3s;
 }
 
-.name-input:focus {
+.pin-input {
+  padding: 15px 20px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1.1em;
+  width: 200px;
+  outline: none;
+  transition: border-color 0.3s;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.name-input:focus,
+.pin-input:focus {
   border-color: #667eea;
 }
 
@@ -78,6 +144,22 @@ body {
 .arrow-btn:hover {
   background: #5a6fd8;
   transform: scale(1.1);
+}
+
+.back-btn {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 20px;
+}
+
+.back-btn:hover {
+  background: #7f8c8d;
 }
 
 .error-message {
@@ -248,6 +330,10 @@ body {
   
   .name-input {
       width: 250px;
+  }
+  
+  .pin-input {
+      width: 150px;
   }
   
   .calendar th,
