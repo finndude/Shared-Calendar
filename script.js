@@ -507,17 +507,30 @@ function renderCalendar() {
 function toggleDate(dateStr, cell) {
     if (cell.classList.contains('other-month')) return;
     
-    const isCurrentlySaved = savedUserDates.has(dateStr);
-    const isCurrentlySelected = selectedDates.has(dateStr);
+    const isAlreadySaved = savedUserDates.has(dateStr);
     
-    if (isCurrentlySelected) {
-        // Remove from temporary selection
-        selectedDates.delete(dateStr);
-        cell.classList.remove('selected');
+    if (isAlreadySaved) {
+        // If clicking on a saved date, mark it for removal
+        if (selectedDates.has(dateStr)) {
+            // Already marked for removal, unmark it
+            selectedDates.delete(dateStr);
+            cell.classList.remove('selected');
+        } else {
+            // Mark for removal (will show blue highlight over the dot)
+            selectedDates.add(dateStr);
+            cell.classList.add('selected');
+        }
     } else {
-        // Add to temporary selection
-        selectedDates.add(dateStr);
-        cell.classList.add('selected');
+        // If clicking on an unsaved date, mark it for addition
+        if (selectedDates.has(dateStr)) {
+            // Remove from selection
+            selectedDates.delete(dateStr);
+            cell.classList.remove('selected');
+        } else {
+            // Add to selection
+            selectedDates.add(dateStr);
+            cell.classList.add('selected');
+        }
     }
     
     // Enable save button when there are pending changes
@@ -560,29 +573,32 @@ async function saveSelectedDates() {
     saveBtn.textContent = 'Saving...';
     
     try {
-        // Calculate final state: current saved dates + new selections - any that were toggled off
-        const finalDates = new Set([...savedUserDates]); // Start with currently saved dates
+        // Separate dates to add and dates to remove
+        const datesToAdd = [];
+        const datesToRemove = [];
         
-        // Add newly selected dates to the final set
         selectedDates.forEach(date => {
             if (savedUserDates.has(date)) {
-                // If already saved and selected again, remove it (toggle off)
-                finalDates.delete(date);
+                // If it's already saved and selected, it means remove it
+                datesToRemove.push(date);
             } else {
-                // If not saved and selected, add it (toggle on)
-                finalDates.add(date);
+                // If it's not saved and selected, it means add it
+                datesToAdd.push(date);
             }
         });
-
-        // Delete all existing entries for this user
-        await window.supabaseClient
-            .from('calendar_entries')
-            .delete()
-            .eq('user_name', currentUser);
-
-        // Insert new entries (only if there are final dates)
-        if (finalDates.size > 0) {
-            const entries = Array.from(finalDates).map(date => ({
+        
+        // Remove dates that were marked for removal
+        if (datesToRemove.length > 0) {
+            await window.supabaseClient
+                .from('calendar_entries')
+                .delete()
+                .eq('user_name', currentUser)
+                .in('date', datesToRemove);
+        }
+        
+        // Add new dates
+        if (datesToAdd.length > 0) {
+            const entries = datesToAdd.map(date => ({
                 user_name: currentUser,
                 date: date,
                 color: currentUserColor
