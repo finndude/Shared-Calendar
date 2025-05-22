@@ -275,7 +275,7 @@ body {
 
 .bottom-controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-top: 20px;
 }
@@ -293,6 +293,47 @@ body {
   border-radius: 50%;
   cursor: pointer;
   border: 3px solid #333;
+}
+
+/* Color Key */
+.color-key {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.color-key h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.user-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  font-size: 0.9em;
+}
+
+.user-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
 }
 
 .save-btn {

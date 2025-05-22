@@ -5,6 +5,30 @@ let currentDate = new Date();
 let selectedDates = new Set();
 let allUserDates = [];
 
+// Predefined color palette for users
+const USER_COLORS = [
+    '#e74c3c', // Red
+    '#3498db', // Blue
+    '#2ecc71', // Green
+    '#f39c12', // Orange
+    '#9b59b6', // Purple
+    '#1abc9c', // Teal
+    '#e67e22', // Dark Orange
+    '#34495e', // Dark Blue Gray
+    '#f1c40f', // Yellow
+    '#e91e63', // Pink
+    '#ff5722', // Deep Orange
+    '#607d8b', // Blue Gray
+    '#795548', // Brown
+    '#009688', // Cyan
+    '#ff9800', // Amber
+    '#8bc34a', // Light Green
+    '#673ab7', // Deep Purple
+    '#03a9f4', // Light Blue
+    '#4caf50', // Green
+    '#ffc107'  // Golden Yellow
+];
+
 // Wait for Supabase to load, then initialize
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Supabase client
@@ -49,10 +73,11 @@ const userName = document.getElementById('userName');
 const userColorDisplay = document.getElementById('userColorDisplay');
 const monthYear = document.getElementById('monthYear');
 const calendarBody = document.getElementById('calendarBody');
-const colorPicker = document.getElementById('colorPicker');
 const saveBtn = document.getElementById('saveBtn');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
+const colorKey = document.getElementById('colorKey');
+const userList = document.getElementById('userList');
 
     // Event listeners
     submitNameBtn.addEventListener('click', handleNameSubmit);
@@ -86,10 +111,6 @@ const nextMonthBtn = document.getElementById('nextMonth');
         showNameEntry();
     });
 
-    colorPicker.addEventListener('change', (e) => {
-        currentUserColor = e.target.value;
-        userColorDisplay.style.backgroundColor = currentUserColor;
-    });
     saveBtn.addEventListener('click', saveSelectedDates);
     prevMonthBtn.addEventListener('click', () => navigateMonth(-1));
     nextMonthBtn.addEventListener('click', () => navigateMonth(1));
@@ -138,6 +159,35 @@ function showCalendar() {
     renderCalendar();
 }
 
+// Get available color for new user
+async function getAvailableColor() {
+    try {
+        // Get all used colors
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('color');
+
+        if (error) throw error;
+
+        const usedColors = data ? data.map(user => user.color) : [];
+        
+        // Find first available color
+        for (const color of USER_COLORS) {
+            if (!usedColors.includes(color)) {
+                return color;
+            }
+        }
+        
+        // If all predefined colors are used, generate a random one
+        return `#${Math.floor(Math.random()*16777215).toString(16)}`;
+        
+    } catch (error) {
+        console.error('Error getting available color:', error);
+        // Fallback to random color
+        return `#${Math.floor(Math.random()*16777215).toString(16)}`;
+    }
+}
+
 // Handle name submission
 async function handleNameSubmit() {
     const name = nameInput.value.trim();
@@ -167,8 +217,9 @@ async function handleNameSubmit() {
             currentUserColor = data[0].color;
             showLogin(name);
         } else {
-            // New user, show PIN setup
+            // New user, get available color and show PIN setup
             currentUser = name;
+            currentUserColor = await getAvailableColor();
             showPinSetup();
         }
         
@@ -276,9 +327,53 @@ async function loadCalendarData() {
 
         allUserDates = data || [];
         updateCalendarDisplay();
+        loadUserColorKey();
         
     } catch (error) {
         console.error('Error loading calendar data:', error);
+    }
+}
+
+// Load and display user color key
+async function loadUserColorKey() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('name, color')
+            .order('name');
+
+        if (error) throw error;
+
+        const users = data || [];
+        
+        // Clear existing user list
+        userList.innerHTML = '';
+        
+        if (users.length === 0) {
+            userList.innerHTML = '<div style="color: #666; font-style: italic;">No users yet</div>';
+            return;
+        }
+        
+        // Create user items
+        users.forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
+            
+            const colorDot = document.createElement('div');
+            colorDot.className = 'user-color-dot';
+            colorDot.style.backgroundColor = user.color;
+            
+            const userName = document.createElement('span');
+            userName.textContent = user.name;
+            
+            userItem.appendChild(colorDot);
+            userItem.appendChild(userName);
+            userList.appendChild(userItem);
+        });
+        
+    } catch (error) {
+        console.error('Error loading user colors:', error);
+        userList.innerHTML = '<div style="color: #e74c3c;">Error loading users</div>';
     }
 }
 
