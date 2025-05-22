@@ -79,44 +79,81 @@ const nextMonthBtn = document.getElementById('nextMonth');
 const colorKey = document.getElementById('colorKey');
 const userList = document.getElementById('userList');
 
-    // Event listeners
-    submitNameBtn.addEventListener('click', handleNameSubmit);
-    nameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleNameSubmit();
-    });
-
-    submitPinBtn.addEventListener('click', handlePinSubmit);
-    pinInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handlePinSubmit();
-    });
-    pinInput.addEventListener('input', (e) => {
-        // Ensure only 4 digits
-        if (e.target.value.length > 4) {
-            e.target.value = e.target.value.slice(0, 4);
+    // Debug: Check which elements are missing
+    const elements = {
+        nameEntry, pinSetup, loginScreen, calendarContainer,
+        nameInput, submitNameBtn, errorMessage,
+        pinInput, submitPinBtn, pinErrorMessage,
+        loginUserName, loginPinInput, submitLoginPinBtn, loginErrorMessage, backToNameBtn,
+        userName, userColorDisplay, monthYear, calendarBody, saveBtn, prevMonthBtn, nextMonthBtn, colorKey, userList
+    };
+    
+    Object.entries(elements).forEach(([name, element]) => {
+        if (!element) {
+            console.error(`Missing element: ${name}`);
         }
     });
 
-    submitLoginPinBtn.addEventListener('click', handleLoginSubmit);
-    loginPinInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleLoginSubmit();
-    });
-    loginPinInput.addEventListener('input', (e) => {
-        // Ensure only 4 digits
-        if (e.target.value.length > 4) {
-            e.target.value = e.target.value.slice(0, 4);
-        }
-    });
+    // Event listeners with null checks
+    if (submitNameBtn) {
+        submitNameBtn.addEventListener('click', handleNameSubmit);
+    }
+    if (nameInput) {
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleNameSubmit();
+        });
+    }
 
-    backToNameBtn.addEventListener('click', () => {
-        showNameEntry();
-    });
+    if (submitPinBtn) {
+        submitPinBtn.addEventListener('click', handlePinSubmit);
+    }
+    if (pinInput) {
+        pinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handlePinSubmit();
+        });
+        pinInput.addEventListener('input', (e) => {
+            // Ensure only 4 digits
+            if (e.target.value.length > 4) {
+                e.target.value = e.target.value.slice(0, 4);
+            }
+        });
+    }
 
-    saveBtn.addEventListener('click', saveSelectedDates);
-    prevMonthBtn.addEventListener('click', () => navigateMonth(-1));
-    nextMonthBtn.addEventListener('click', () => navigateMonth(1));
+    if (submitLoginPinBtn) {
+        submitLoginPinBtn.addEventListener('click', handleLoginSubmit);
+    }
+    if (loginPinInput) {
+        loginPinInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLoginSubmit();
+        });
+        loginPinInput.addEventListener('input', (e) => {
+            // Ensure only 4 digits
+            if (e.target.value.length > 4) {
+                e.target.value = e.target.value.slice(0, 4);
+            }
+        });
+    }
 
-    // Focus on name input
-    nameInput.focus();
+    if (backToNameBtn) {
+        backToNameBtn.addEventListener('click', () => {
+            showNameEntry();
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSelectedDates);
+    }
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener('click', () => navigateMonth(-1));
+    }
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener('click', () => navigateMonth(1));
+    }
+
+    // Focus on name input if it exists
+    if (nameInput) {
+        nameInput.focus();
+    }
 });
 
 // Show different screens
