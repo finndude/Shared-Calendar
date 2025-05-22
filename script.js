@@ -569,9 +569,6 @@ function updateCalendarDisplay() {
 async function saveSelectedDates() {
     if (selectedDates.size === 0) return;
     
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
-    
     try {
         // Separate dates to add and dates to remove
         const datesToAdd = [];
@@ -618,18 +615,13 @@ async function saveSelectedDates() {
         selectedDates.clear();
         updateCalendarDisplay();
         
-        saveBtn.textContent = 'Saved!';
-        setTimeout(() => {
-            saveBtn.textContent = 'Toggle Dates';
-            saveBtn.disabled = true; // Disable until user makes new changes
-        }, 2000);
+        // Disable button only when no changes are pending
+        if (saveBtn) {
+            saveBtn.disabled = selectedDates.size === 0;
+        }
         
     } catch (error) {
         console.error('Error saving dates:', error);
-        saveBtn.textContent = 'Error - Try Again';
-        setTimeout(() => {
-            saveBtn.textContent = 'Toggle Dates';
-            saveBtn.disabled = true;
-        }, 3000);
+        // Keep button state as is if there was an error
     }
 }
