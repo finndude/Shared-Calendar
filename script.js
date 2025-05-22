@@ -377,11 +377,9 @@ async function loadCalendarData() {
 
 // Load current user's previously saved dates
 function loadCurrentUserDates() {
+    // Don't pre-load saved dates into selectedDates
+    // Let saved dates show as dots, only new selections show as highlights
     selectedDates.clear();
-    const userDates = allUserDates.filter(entry => entry.user_name === currentUser);
-    userDates.forEach(entry => {
-        selectedDates.add(entry.date);
-    });
     
     // Disable save button initially since no changes made yet
     if (saveBtn) {
@@ -498,15 +496,22 @@ function renderCalendar() {
 function toggleDate(dateStr, cell) {
     if (cell.classList.contains('other-month')) return;
     
+    // Check if this date is already saved by the current user
+    const isAlreadySaved = allUserDates.some(entry => 
+        entry.date === dateStr && entry.user_name === currentUser
+    );
+    
     if (selectedDates.has(dateStr)) {
+        // Remove from current selection
         selectedDates.delete(dateStr);
         cell.classList.remove('selected');
     } else {
+        // Add to current selection
         selectedDates.add(dateStr);
         cell.classList.add('selected');
     }
     
-    // Always enable save button when there are changes from the original state
+    // Enable save button when there are changes
     if (saveBtn) {
         saveBtn.disabled = false;
     }
@@ -514,10 +519,8 @@ function toggleDate(dateStr, cell) {
 
 // Add dots for existing entries
 function addDateDots(cell, dateStr) {
-    // Get all entries for this date (excluding current user's entries since they'll be shown as selected)
-    const existingEntries = allUserDates.filter(entry => 
-        entry.date === dateStr && entry.user_name !== currentUser
-    );
+    // Get all entries for this date (including current user)
+    const existingEntries = allUserDates.filter(entry => entry.date === dateStr);
     
     if (existingEntries.length > 0) {
         const dotsContainer = document.createElement('div');
@@ -546,15 +549,26 @@ async function saveSelectedDates() {
     saveBtn.textContent = 'Saving...';
     
     try {
-        // Delete existing entries for this user
-        await window.supabaseClient
-            .from('calendar_entries')
-            .delete()
-            .eq('user_name', currentUser);
-
-        // Insert new entries (only if there are selected dates)
-        if (selectedDates.size > 0) {
-            const entries = Array.from(selectedDates).map(date => ({
+        // Get current user's existing dates
+        const currentUserDates = allUserDates.filter(entry => entry.user_name === currentUser);
+        const currentSavedDates = new Set(currentUserDates.map(entry => entry.date));
+        
+        // Calculate what to add and what to remove
+        const datesToAdd = Array.from(selectedDates).filter(date => !currentSavedDates.has(date));
+        const datesToRemove = Array.from(currentSavedDates).filter(date => !selectedDates.has(date));
+        
+        // Remove dates that are no longer selected
+        if (datesToRemove.length > 0) {
+            await window.supabaseClient
+                .from('calendar_entries')
+                .delete()
+                .eq('user_name', currentUser)
+                .in('date', datesToRemove);
+        }
+        
+        // Add new dates
+        if (datesToAdd.length > 0) {
+            const newEntries = datesToAdd.map(date => ({
                 user_name: currentUser,
                 date: date,
                 color: currentUserColor
@@ -562,7 +576,7 @@ async function saveSelectedDates() {
 
             const { error } = await window.supabaseClient
                 .from('calendar_entries')
-                .insert(entries);
+                .insert(newEntries);
 
             if (error) throw error;
         }
