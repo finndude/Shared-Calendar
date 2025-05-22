@@ -363,11 +363,29 @@ async function loadCalendarData() {
         if (error) throw error;
 
         allUserDates = data || [];
+        
+        // Load current user's saved dates into selectedDates
+        loadCurrentUserDates();
+        
         updateCalendarDisplay();
         loadUserColorKey();
         
     } catch (error) {
         console.error('Error loading calendar data:', error);
+    }
+}
+
+// Load current user's previously saved dates
+function loadCurrentUserDates() {
+    selectedDates.clear();
+    const userDates = allUserDates.filter(entry => entry.user_name === currentUser);
+    userDates.forEach(entry => {
+        selectedDates.add(entry.date);
+    });
+    
+    // Update save button state
+    if (saveBtn) {
+        saveBtn.disabled = selectedDates.size === 0;
     }
 }
 
@@ -493,7 +511,10 @@ function toggleDate(dateStr, cell) {
 
 // Add dots for existing entries
 function addDateDots(cell, dateStr) {
-    const existingEntries = allUserDates.filter(entry => entry.date === dateStr);
+    // Get all entries for this date (excluding current user's entries since they'll be shown as selected)
+    const existingEntries = allUserDates.filter(entry => 
+        entry.date === dateStr && entry.user_name !== currentUser
+    );
     
     if (existingEntries.length > 0) {
         const dotsContainer = document.createElement('div');
@@ -518,8 +539,6 @@ function updateCalendarDisplay() {
 
 // Save selected dates
 async function saveSelectedDates() {
-    if (selectedDates.size === 0) return;
-    
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     
@@ -530,35 +549,36 @@ async function saveSelectedDates() {
             .delete()
             .eq('user_name', currentUser);
 
-        // Insert new entries
-        const entries = Array.from(selectedDates).map(date => ({
-            user_name: currentUser,
-            date: date,
-            color: currentUserColor
-        }));
+        // Insert new entries (only if there are selected dates)
+        if (selectedDates.size > 0) {
+            const entries = Array.from(selectedDates).map(date => ({
+                user_name: currentUser,
+                date: date,
+                color: currentUserColor
+            }));
 
-        const { error } = await window.supabaseClient
-            .from('calendar_entries')
-            .insert(entries);
+            const { error } = await window.supabaseClient
+                .from('calendar_entries')
+                .insert(entries);
 
-        if (error) throw error;
+            if (error) throw error;
+        }
 
         // Reload data and update display
         await loadCalendarData();
-        selectedDates.clear();
         
         saveBtn.textContent = 'Saved!';
         setTimeout(() => {
-            saveBtn.textContent = 'Save Selected Dates';
-            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+            saveBtn.disabled = selectedDates.size === 0;
         }, 2000);
         
     } catch (error) {
         console.error('Error saving dates:', error);
         saveBtn.textContent = 'Error - Try Again';
         setTimeout(() => {
-            saveBtn.textContent = 'Save Selected Dates';
-            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+            saveBtn.disabled = selectedDates.size === 0;
         }, 3000);
     }
 }
