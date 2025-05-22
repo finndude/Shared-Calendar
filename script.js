@@ -2,7 +2,8 @@
 let currentUser = '';
 let currentUserColor = '#3498db';
 let currentDate = new Date();
-let selectedDates = new Set();
+let selectedDates = new Set(); // Only for temporary selections before save
+let savedUserDates = new Set(); // Track user's saved dates separately
 let allUserDates = [];
 
 // Predefined color palette for users
@@ -377,10 +378,12 @@ async function loadCalendarData() {
 
 // Load current user's previously saved dates
 function loadCurrentUserDates() {
-    selectedDates.clear();
+    selectedDates.clear(); // Clear temporary selections
+    savedUserDates.clear(); // Clear saved dates tracker
+    
     const userDates = allUserDates.filter(entry => entry.user_name === currentUser);
     userDates.forEach(entry => {
-        selectedDates.add(entry.date);
+        savedUserDates.add(entry.date); // Track what's saved in database
     });
     
     // Disable save button initially since no changes made yet
@@ -482,7 +485,7 @@ function renderCalendar() {
                 cell.classList.add('other-month');
             }
             
-            // Mark selected dates (but make selection more subtle)
+            // Mark temporarily selected dates (blue highlight)
             if (selectedDates.has(dateStr)) {
                 cell.classList.add('selected');
             }
@@ -490,7 +493,7 @@ function renderCalendar() {
             // Add click handler
             cell.addEventListener('click', () => toggleDate(dateStr, cell));
             
-            // Add dots for existing entries
+            // Add dots for existing entries (saved dates)
             addDateDots(cell, dateStr);
             
             row.appendChild(cell);
@@ -504,24 +507,22 @@ function renderCalendar() {
 function toggleDate(dateStr, cell) {
     if (cell.classList.contains('other-month')) return;
     
-    // Check if this date is already saved by the current user
-    const isAlreadySaved = allUserDates.some(entry => 
-        entry.date === dateStr && entry.user_name === currentUser
-    );
+    const isCurrentlySaved = savedUserDates.has(dateStr);
+    const isCurrentlySelected = selectedDates.has(dateStr);
     
-    if (selectedDates.has(dateStr)) {
-        // Remove from current selection
+    if (isCurrentlySelected) {
+        // Remove from temporary selection
         selectedDates.delete(dateStr);
         cell.classList.remove('selected');
     } else {
-        // Add to current selection
+        // Add to temporary selection
         selectedDates.add(dateStr);
         cell.classList.add('selected');
     }
     
-    // Enable save button when there are changes
+    // Enable save button when there are pending changes
     if (saveBtn) {
-        saveBtn.disabled = false;
+        saveBtn.disabled = selectedDates.size === 0;
     }
 }
 
@@ -553,19 +554,35 @@ function updateCalendarDisplay() {
 
 // Save selected dates
 async function saveSelectedDates() {
+    if (selectedDates.size === 0) return;
+    
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     
     try {
-        // Delete existing entries for this user
+        // Calculate final state: current saved dates + new selections - any that were toggled off
+        const finalDates = new Set([...savedUserDates]); // Start with currently saved dates
+        
+        // Add newly selected dates to the final set
+        selectedDates.forEach(date => {
+            if (savedUserDates.has(date)) {
+                // If already saved and selected again, remove it (toggle off)
+                finalDates.delete(date);
+            } else {
+                // If not saved and selected, add it (toggle on)
+                finalDates.add(date);
+            }
+        });
+
+        // Delete all existing entries for this user
         await window.supabaseClient
             .from('calendar_entries')
             .delete()
             .eq('user_name', currentUser);
 
-        // Insert new entries (only if there are selected dates)
-        if (selectedDates.size > 0) {
-            const entries = Array.from(selectedDates).map(date => ({
+        // Insert new entries (only if there are final dates)
+        if (finalDates.size > 0) {
+            const entries = Array.from(finalDates).map(date => ({
                 user_name: currentUser,
                 date: date,
                 color: currentUserColor
@@ -581,10 +598,14 @@ async function saveSelectedDates() {
         // Reload data and update display
         await loadCalendarData();
         
+        // Clear temporary selections after saving (removes blue highlights)
+        selectedDates.clear();
+        updateCalendarDisplay();
+        
         saveBtn.textContent = 'Saved!';
         setTimeout(() => {
             saveBtn.textContent = 'Toggle Dates';
-            saveBtn.disabled = true; // Disable until user makes changes
+            saveBtn.disabled = true; // Disable until user makes new changes
         }, 2000);
         
     } catch (error) {
