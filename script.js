@@ -383,9 +383,9 @@ function loadCurrentUserDates() {
         selectedDates.add(entry.date);
     });
     
-    // Update save button state
+    // Disable save button initially since no changes made yet
     if (saveBtn) {
-        saveBtn.disabled = selectedDates.size === 0;
+        saveBtn.disabled = true;
     }
 }
 
@@ -506,7 +506,10 @@ function toggleDate(dateStr, cell) {
         cell.classList.add('selected');
     }
     
-    saveBtn.disabled = selectedDates.size === 0;
+    // Always enable save button when there are changes from the original state
+    if (saveBtn) {
+        saveBtn.disabled = false;
+    }
 }
 
 // Add dots for existing entries
@@ -567,18 +570,22 @@ async function saveSelectedDates() {
         // Reload data and update display
         await loadCalendarData();
         
+        // Clear visual selections after saving
+        selectedDates.clear();
+        updateCalendarDisplay();
+        
         saveBtn.textContent = 'Saved!';
         setTimeout(() => {
-            saveBtn.textContent = 'Save Changes';
-            saveBtn.disabled = selectedDates.size === 0;
+            saveBtn.textContent = 'Toggle Dates';
+            saveBtn.disabled = true; // Disable until user makes changes
         }, 2000);
         
     } catch (error) {
         console.error('Error saving dates:', error);
         saveBtn.textContent = 'Error - Try Again';
         setTimeout(() => {
-            saveBtn.textContent = 'Save Changes';
-            saveBtn.disabled = selectedDates.size === 0;
+            saveBtn.textContent = 'Toggle Dates';
+            saveBtn.disabled = true;
         }, 3000);
     }
 }
