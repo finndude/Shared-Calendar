@@ -1,19 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shared Availability Calendar</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Calendar</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.3/umd/supabase.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Shared Availability Calendar</h1>
-    <input type="text" id="username" placeholder="Enter your name" />
-    <div id="calendar"></div>
-    <p id="status"></p>
-  </div>
+    <div class="container">
+        <!-- Name Entry Screen -->
+        <div class="name-entry" id="nameEntry">
+            <h1>Shared Calendar</h1>
+            <p>Enter your name to access the shared calendar</p>
+            <div class="name-input-container">
+                <input type="text" class="name-input" id="nameInput" placeholder="Your name" maxlength="50">
+                <button class="arrow-btn" id="submitName">→</button>
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
 
-  <script type="module" src="script.js"></script>
+        <!-- Calendar Screen -->
+        <div class="calendar-container" id="calendarContainer">
+            <div class="calendar-header">
+                <div class="user-info">
+                    <span>Hello, <strong id="userName"></strong></span>
+                    <div class="user-color" id="userColorDisplay"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-btn" id="prevMonth">‹</button>
+                    <span class="month-year" id="monthYear"></span>
+                    <button class="nav-btn" id="nextMonth">›</button>
+                </div>
+            </div>
+
+            <table class="calendar" id="calendar">
+                <thead>
+                    <tr>
+                        <th>Sun</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarBody">
+                </tbody>
+            </table>
+
+            <div class="bottom-controls">
+                <div class="color-picker-container">
+                    <label>Your color:</label>
+                    <input type="color" class="color-picker" id="colorPicker" value="#3498db">
+                </div>
+                <button class="save-btn" id="saveBtn">Save Selected Dates</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
