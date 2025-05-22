@@ -251,7 +251,8 @@ body {
 }
 
 .calendar td.selected {
-  background: #e3f2fd;
+  background: rgba(52, 152, 219, 0.3);
+  border: 2px solid #3498db;
 }
 
 .date-dots {
