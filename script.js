@@ -240,23 +240,25 @@ async function handleNameSubmit() {
         return;
     }
 
-    // Check if name exists in database
+    // Check if name exists in database (case-insensitive)
     try {
         const { data, error } = await window.supabaseClient
             .from('users')
             .select('name, color')
-            .eq('name', name);
+            .ilike('name', name); // Case-insensitive search
 
         if (error) throw error;
 
         if (data && data.length > 0) {
             // User exists, show login screen
-            currentUser = name;
+            // Use the original case from database
+            currentUser = data[0].name;
             currentUserColor = data[0].color;
-            showLogin(name);
+            showLogin(data[0].name);
         } else {
             // New user, get available color and show PIN setup
-            currentUser = name;
+            // Store name with proper case (first letter capitalized)
+            currentUser = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
             currentUserColor = await getAvailableColor();
             showPinSetup();
         }
@@ -321,18 +323,20 @@ async function handleLoginSubmit() {
         return;
     }
 
-    // Verify PIN
+    // Verify PIN (case-insensitive name matching)
     try {
         const { data, error } = await window.supabaseClient
             .from('users')
             .select('name, color, pin')
-            .eq('name', currentUser)
+            .ilike('name', currentUser) // Case-insensitive search
             .eq('pin', pin);
 
         if (error) throw error;
 
         if (data && data.length > 0) {
             // Correct PIN, load user data and show calendar
+            // Use the original case from database
+            currentUser = data[0].name;
             currentUserColor = data[0].color;
             showCalendar();
         } else {
