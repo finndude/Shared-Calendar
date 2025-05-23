@@ -11,6 +11,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-bottom: 60px; /* Space for footer */
 }
 
 .container {
@@ -337,6 +338,37 @@ body {
   border: 1px solid rgba(0,0,0,0.2);
 }
 
+/* Footer */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #ddd;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.9em;
+  color: #666;
+  z-index: 1000;
+}
+
+.footer a {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer a:hover {
+  color: #5a6fd8;
+  text-decoration: underline;
+}
+
+.footer strong {
+  color: #333;
+}
+
 .save-btn {
   background: #27ae60;
   color: white;
@@ -368,6 +400,7 @@ body {
   .container {
       margin: 20px;
       padding: 20px;
+      margin-bottom: 80px; /* Extra space for footer on mobile */
   }
   
   .name-input {
@@ -386,5 +419,10 @@ body {
   
   .month-year {
       font-size: 1.4em;
+  }
+  
+  .footer {
+      font-size: 0.8em;
+      padding: 8px 10px;
   }
 }
